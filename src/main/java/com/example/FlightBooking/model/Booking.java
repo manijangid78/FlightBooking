@@ -21,6 +21,9 @@ public class Booking {
     private String currentTimeStamp;
     private int personCount;
 
+    public Booking() {
+    }
+
     public Booking(Date bookingDate, String fromLocation, String toLocation, int price, Time sourceTime, Time destinationTime, int personCount) {
         this.bookingDate = bookingDate;
         this.fromLocation = fromLocation;

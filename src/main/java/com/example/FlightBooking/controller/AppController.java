@@ -26,7 +26,7 @@ public class AppController {
 //
 //    }
 
-        @GetMapping("/search")
+    @GetMapping("/search")
     public List<Object> search(@RequestParam("source") String source, @RequestParam("destination")String destination, @RequestParam("Date") Date date){
         List<Object> objects = null;
         try {
@@ -47,6 +47,8 @@ public class AppController {
             return e.getMessage();
         }
     }
+
+
 
     @GetMapping("/getAllFlights")
     public List<Flight> getFlights(){
