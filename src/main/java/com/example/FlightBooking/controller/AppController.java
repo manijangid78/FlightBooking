@@ -14,17 +14,16 @@ public class AppController {
     @Autowired
     private AppService appService;
 
-//    @GetMapping("/test")
-//    public String test(){
-//        try {
-//            appService.addFlight();
-//            return "Done";
-//        }catch (Exception e){
-//            e.printStackTrace();
-//            return "Exception";
-//        }
-//
-//    }
+    @GetMapping("/test")
+    public String test(){
+        try {
+            appService.addFlight();
+            return "Done";
+        }catch (Exception e){
+            e.printStackTrace();
+            return "Exception";
+        }
+    }
 
     @GetMapping("/search")
     public List<Object> search(@RequestParam("source") String source, @RequestParam("destination")String destination, @RequestParam("Date") Date date){
