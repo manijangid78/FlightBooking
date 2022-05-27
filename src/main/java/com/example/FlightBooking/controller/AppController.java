@@ -46,7 +46,7 @@ public class AppController {
         return objects;
     }
 
-    @GetMapping("/bookTicket")
+    @PostMapping("/bookTicket")
     public String bookTicket(@RequestParam("flight_id") int flightId, @RequestParam("source")String source,
                              @RequestParam("destination")String destination, @RequestParam("seatCount") int seatCount ,@RequestHeader("Authorization") String authorization){
         try {
