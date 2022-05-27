@@ -5,6 +5,8 @@ import com.example.FlightBooking.repository.BookingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 public class BookingDao {
 
@@ -13,5 +15,9 @@ public class BookingDao {
 
     public Booking bookTicket(Booking booking){
         return bookingRepository.save(booking);
+    }
+
+    public List<Booking> getBooking(String username){
+        return bookingRepository.findByUsername(username);
     }
 }

@@ -64,7 +64,7 @@ class FlightBookingApplicationTests {
 	void bookTicket(){
 		String sourceLocation = "jhodhpur";
 		String destinationLocation = "delhi";
-		Booking newBooking = new Booking(new Date(new java.util.Date().getTime()), sourceLocation, destinationLocation, 2000, Time.valueOf("20:03:10"), Time.valueOf("20:03:10"),1);
+		Booking newBooking = new Booking(new Date(new java.util.Date().getTime()), sourceLocation, destinationLocation, 2000, Time.valueOf("20:03:10"), Time.valueOf("20:03:10"),1, "mani");
 		Mockito.when(bookingRepository.save(newBooking)).thenReturn(newBooking);
 		Assertions.assertEquals(sourceLocation,newBooking.getFromLocation());
 	}

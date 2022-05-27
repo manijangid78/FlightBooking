@@ -37,13 +37,17 @@ public class AppService {
         return objects;
     }
 
-    public String bookFlightTickets(int flightId, String source, String destination, int seatCount){
+    public List<Booking> getBooking(String username){
+        return bookingDao.getBooking(username);
+    }
+
+    public String bookFlightTickets(int flightId, String source, String destination, int seatCount, String username){
         Flight flight = flightDao.getFlightById(flightId);
         if(flight!=null && flight.getSeatAvailableCount()>=seatCount){
             flight.setSeatAvailableCount(flight.getSeatAvailableCount()-seatCount);
             flightDao.addFlight(flight);
             bookingDao.bookTicket(new Booking(flight.getDate(), source, destination,
-                                    flight.getPrice()*seatCount, flight.getSourceTime(), flight.getDestinationTime(), seatCount));
+                                    flight.getPrice()*seatCount, flight.getSourceTime(), flight.getDestinationTime(), seatCount, username));
             return "Done";
         }else{
             return "In this fight, there is no available seats";

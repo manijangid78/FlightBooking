@@ -20,11 +20,12 @@ public class Booking {
     private Time destinationTime;
     private String currentTimeStamp;
     private int personCount;
+    private String username;
 
     public Booking() {
     }
 
-    public Booking(Date bookingDate, String fromLocation, String toLocation, int price, Time sourceTime, Time destinationTime, int personCount) {
+    public Booking(Date bookingDate, String fromLocation, String toLocation, int price, Time sourceTime, Time destinationTime, int personCount, String username) {
         this.bookingDate = bookingDate;
         this.fromLocation = fromLocation;
         this.toLocation = toLocation;
@@ -32,7 +33,9 @@ public class Booking {
         this.sourceTime = sourceTime;
         this.destinationTime = destinationTime;
         this.personCount = personCount;
+        this.username = username;
         this.currentTimeStamp = new java.util.Date().toString();
+
     }
 
     public int getId() {
