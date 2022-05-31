@@ -17,7 +17,7 @@ public class FlightCustomRepositoryImpl implements FlightCustomRepository{
     private EntityManager entityManager;
 
     @Override
-    public List<Object> findFlights(String source, String destination, Date date) {
+    public List<Flight> findFlights(String source, String destination, Date date) {
         CriteriaBuilder cb=entityManager.getCriteriaBuilder();
         CriteriaQuery cq=cb.createQuery(Flight.class);
 
@@ -35,7 +35,7 @@ public class FlightCustomRepositoryImpl implements FlightCustomRepository{
 //        Predicate predicate7 = cb.and(predicate5,predicate6,predicate8);
 
         cq.select(flightRoot).where(cb.and(predicate5,predicate6,predicate8));
-        List<Object> resultList = entityManager.createQuery(cq).getResultList();
+        List<Flight> resultList = entityManager.createQuery(cq).getResultList();
         return resultList;
     }
 

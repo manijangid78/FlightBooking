@@ -51,7 +51,7 @@ public class Flight {
         this.price = price;
         this.sourceTime = Time.valueOf("20:03:10");
         this.destinationTime = Time.valueOf("23:03:10");
-        this.currentTimeStamp = new java.util.Date().toString();
+        this.currentTimeStamp ="Mon May 30 13:49:12 IST 2022";
         this.seatAvailableCount = 10;
 //        this.flightSeat = new FlightSeat();
     }
@@ -144,11 +144,4 @@ public class Flight {
         this.seatAvailableCount = seatAvailableCount;
     }
 
-    //    public FlightSeat getFlightSeat() {
-//        return flightSeat;
-//    }
-//
-//    public void setFlightSeat(FlightSeat flightSeat) {
-//        this.flightSeat = flightSeat;
-//    }
 }

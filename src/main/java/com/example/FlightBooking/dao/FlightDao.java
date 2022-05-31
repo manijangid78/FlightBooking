@@ -21,18 +21,12 @@ public class FlightDao {
         return "Done";
     }
 
-
-    public List<Object> getFlightsBySourceDestinationAndDate(String source, String destination, Date date){
+    public List<Flight> getFlightsBySourceDestinationAndDate(String source, String destination, Date date){
         return flightRepository.findFlights(source, destination, date);
     }
 
-    public Flight getFlightById(int flightId){
-        Optional<Flight> optionalFlight = flightRepository.findById(flightId);
-        Flight flight = null;
-        if(!optionalFlight.isEmpty()) {
-            flight = optionalFlight.get();
-        }
-        return flight;
+    public Optional<Flight> getFlightById(int flightId){
+        return flightRepository.findById(flightId);
     }
 
     public List<Flight> getFlights(){

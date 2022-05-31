@@ -1,18 +1,14 @@
 package com.example.FlightBooking.controller;
 
-import com.example.FlightBooking.model.Booking;
-import com.example.FlightBooking.model.Flight;
+import com.example.FlightBooking.constants.Constant;
+import com.example.FlightBooking.model.*;
 import com.example.FlightBooking.service.AppService;
-import com.example.FlightBooking.service.MyUserDetailsService;
-import com.sun.net.httpserver.HttpContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.awt.print.Book;
-import java.net.http.HttpRequest;
 import java.nio.charset.StandardCharsets;
-import java.sql.Date;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
@@ -22,81 +18,82 @@ public class AppController {
     @Autowired
     private AppService appService;
 
-
-
-    @GetMapping("/test")
-    public String test(){
-        try {
-            appService.addFlight();
-            return "Done";
-        }catch (Exception e){
-            e.printStackTrace();
-            return "Exception";
-        }
+    // Add new flights
+    @GetMapping("/addFlight")
+    public ResponseEntity<String> test(){
+        String response = appService.addFlight();
+        return new ResponseEntity<String>(response,HttpStatus.OK);
     }
 
+    // search flights based on source, destination and date
     @GetMapping("/search")
-    public List<Object> search(@RequestParam("source") String source, @RequestParam("destination")String destination, @RequestParam("Date") Date date){
-        List<Object> objects = null;
-        try {
-            objects =  appService.getFlightsBySourceDestinationAndDate(source,destination,date);
-        }catch (Exception e){
-            e.printStackTrace();
+    public ResponseEntity<?> search(@RequestBody SearchBody searchBody){
+        SearchResponse searchResponse = appService.getFlightsBySourceDestinationAndDate(searchBody);
+        if(searchResponse!=null) {
+            return new ResponseEntity<SearchResponse>(searchResponse, HttpStatus.OK);
+        }else{
+            return new ResponseEntity<String>(Constant.InternalServerError, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return objects;
     }
 
+    // book flight tickets
     @PostMapping("/bookTicket")
-    public String bookTicket(@RequestParam("flight_id") int flightId, @RequestParam("source")String source,
-                             @RequestParam("destination")String destination, @RequestParam("seatCount") int seatCount ,@RequestHeader("Authorization") String authorization){
-        try {
-//            final String authorization = httpRequest.getHeader("Authorization");
-            if (authorization != null && authorization.toLowerCase().startsWith("basic")) {
-                // Authorization: Basic base64credentials
-                String base64Credentials = authorization.substring("Basic".length()).trim();
-                byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
-                String credentials = new String(credDecoded, StandardCharsets.UTF_8);
-                // credentials = username:password
-                System.out.println(credentials);
-                final String[] values = credentials.split(":", 2);
-                return appService.bookFlightTickets(flightId, source, destination, seatCount, values[0]);
+    public ResponseEntity<String> bookTicket(@RequestBody BookTicketBody bookTicketBody , @RequestHeader("Authorization") String authorization){
+//        checking decoding username and password
+        if (authorization != null && authorization.toLowerCase().startsWith("basic")) {
+            // Authorization: Basic base64credentials
+            String base64Credentials = authorization.substring("Basic".length()).trim();
+            byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+            String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+            // credentials = username:password
+            final String[] values = credentials.split(":", 2);
+//            call funtion at service level
+            String bookTicketRes = appService.bookFlightTickets(bookTicketBody, values[0]);
+            if(bookTicketRes.equals(Constant.BookingDone)){
+                return new ResponseEntity<String>(bookTicketRes, HttpStatus.OK);
             }else{
-                return "User is not authenticated";
+                return new ResponseEntity<String>(Constant.InternalServerError,HttpStatus.INTERNAL_SERVER_ERROR);
             }
-        }catch (Exception e){
-            e.printStackTrace();
-            return e.getMessage();
+        }else{
+            return new ResponseEntity<String>(Constant.Unauthenticated,HttpStatus.UNAUTHORIZED);
         }
     }
 
+    // get all booking done by the user
     @GetMapping("/getBooking")
-    public List<Booking> getBookings(@RequestHeader("Authorization") String authorization){
-        try{
-            if (authorization != null && authorization.toLowerCase().startsWith("basic")) {
-                // Authorization: Basic base64credentials
-                String base64Credentials = authorization.substring("Basic".length()).trim();
-                byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
-                String credentials = new String(credDecoded, StandardCharsets.UTF_8);
-                // credentials = username:password
-                System.out.println(credentials);
-                final String[] values = credentials.split(":", 2);
-                return appService.getBooking(values[0]);
+    public ResponseEntity<?> getBookings(@RequestHeader("Authorization") String authorization){
+        // authorisation check  and decode the username and password
+        if (authorization != null && authorization.toLowerCase().startsWith("basic")) {
+            // Authorization: Basic base64credentials
+            String base64Credentials = authorization.substring("Basic".length()).trim();
+            byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+            String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+            // credentials = username:password
+            final String[] values = credentials.split(":", 2);
+            BookingResponse bookingResponse =appService.getBooking(values[0]);
+            if(bookingResponse.getBookings()!=null){
+                return new ResponseEntity<BookingResponse>(bookingResponse,HttpStatus.OK);
             }else{
-                return new ArrayList<>();
+                return new ResponseEntity<String>(Constant.InternalServerError,HttpStatus.INTERNAL_SERVER_ERROR);
             }
-        }catch (Exception e){
-            return null;
+        }else{
+            return new ResponseEntity<String>(Constant.Unauthenticated,HttpStatus.UNAUTHORIZED);
         }
     }
 
     @GetMapping("/getAllFlights")
-    public List<Flight> getFlights(){
-        List<Flight> flights = null;
-        try {
-            flights = appService.getFlights();
-        }catch (Exception e){
-            e.printStackTrace();
+    public ResponseEntity<SearchResponse> getFlights(){
+        SearchResponse flights = appService.getFlights();
+        return new ResponseEntity<>(flights,HttpStatus.OK);
+    }
+
+    @PutMapping("/cancelBooking")
+    public ResponseEntity<String> cancelBooking(@RequestParam("ticketId")int ticketId){
+        String response = appService.cancelFlight(ticketId);
+        if(response.equals(Constant.CancelMsg)){
+            return new ResponseEntity<>(response,HttpStatus.OK);
+        }else{
+            return new ResponseEntity<>(response,HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return flights;
     }
 }
