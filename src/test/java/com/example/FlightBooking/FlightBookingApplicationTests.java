@@ -1,14 +1,18 @@
 package com.example.FlightBooking;
 
+import com.example.FlightBooking.constants.Constant;
 import com.example.FlightBooking.controller.AppController;
-import com.example.FlightBooking.model.Booking;
-import com.example.FlightBooking.model.Flight;
+import com.example.FlightBooking.dao.BookingDao;
+import com.example.FlightBooking.dao.FlightDao;
+import com.example.FlightBooking.model.*;
 import com.example.FlightBooking.repository.BookingRepository;
 import com.example.FlightBooking.repository.FlightRepository;
 import com.example.FlightBooking.service.AppService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -18,95 +22,79 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import java.sql.Date;
 import java.sql.Time;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @SpringBootTest
 //@WebMvcTest(AppController.class)
 class FlightBookingApplicationTests {
 
-	@MockBean
+	@InjectMocks
 	private AppService appService;
 
-//	@Autowired
-//	private MockMvc mvc;
+	@Mock
+	private BookingDao bookingDao;
 
-	@Autowired
-	private ObjectMapper mapper;
+	@Mock
+	private FlightDao flightDao;
 
-	@MockBean
+	@Mock
 	private FlightRepository flightRepository;
 
-	@MockBean
+	@Mock
 	private BookingRepository bookingRepository;
 
 	private List<Flight> flightList = List.of(new Flight("1","jhodhpur","mumbai","delhi",5000,new Date(new java.util.Date().getTime())),
 			new Flight("5","jaipur","delhi","",8000,new Date(new java.util.Date().getTime())));
-	Flight flight = new Flight("8","jhodhpur","mumbai","delhi",5000,new Date(new java.util.Date().getTime()));
-
+	private Flight flight = new Flight("8","jhodhpur","mumbai","delhi",5000,new Date(new java.util.Date().getTime()));
+	private SearchResponse searchResponse = new SearchResponse(new ArrayList<>(Arrays.asList(flight)));
+	private Booking booking = new Booking(Date.valueOf("2022-05-30"), "jhodpur","delhi",8000,Time.valueOf("20:03:10"),Time.valueOf("23:03:10"),2,0,"mani");
+	private List<Booking> bookingList = List.of(
+			new Booking(Date.valueOf("2022-05-30"), "jhodpur","delhi",8000,Time.valueOf("20:03:10"),Time.valueOf("23:03:10"),2,4,"mani"),
+			new Booking(Date.valueOf("2022-05-30"), "jaipur","delhi",8000,Time.valueOf("20:03:10"),Time.valueOf("23:03:10"),2,3,"mani")
+	);
 
 	@Test
 	void contextLoads() {
 	}
 
 	@Test
-	void searchFlights(){
-		String sourceLocation = "jhodhpur";
-		String destinationLocation = "delhi";
-		Date date = new Date(new java.util.Date().getTime());
-		List<Object> objectList = new ArrayList<>();
-		objectList.add(new Flight("1","jhodhpur","banglore","delhi, mumbai",5000,new Date(new java.util.Date().getTime())));
-		objectList.add(new Flight("1","jhodhpur","mumbai","delhi",5000,new Date(new java.util.Date().getTime())));
-		Mockito.when(flightRepository.findFlights(sourceLocation,destinationLocation,date)).thenReturn(objectList);
-		Assertions.assertEquals(2, flightRepository.findFlights(sourceLocation,destinationLocation, date).size());
+	public void searchTest(){
+		Mockito.when(flightDao.getFlightsBySourceDestinationAndDate(Mockito.anyString(), Mockito.anyString(), Mockito.any())).thenReturn(flightList);
+		SearchBody searchBody = new SearchBody("jodhpur","delhi",Date.valueOf("2022-05-23"));
+		Assertions.assertEquals("1",appService.getFlightsBySourceDestinationAndDate(searchBody).getFlights().get(0).getFlightName());
 	}
 
 	@Test
-	void bookTicket(){
-		String sourceLocation = "jhodhpur";
-		String destinationLocation = "delhi";
-		Booking newBooking = new Booking(new Date(new java.util.Date().getTime()), sourceLocation, destinationLocation, 2000, Time.valueOf("20:03:10"), Time.valueOf("20:03:10"),1, "mani");
-		Mockito.when(bookingRepository.save(newBooking)).thenReturn(newBooking);
-		Assertions.assertEquals(sourceLocation,newBooking.getFromLocation());
+	public void cancelBookingService(){
+		Mockito.when(bookingDao.getBookingById(Mockito.anyInt())).thenReturn(java.util.Optional.ofNullable(booking));
+		Mockito.when(flightDao.getFlightById(Mockito.anyInt())).thenReturn(java.util.Optional.ofNullable(flight));
+		Assertions.assertEquals(Constant.CancelMsg,appService.cancelFlight(44));
 	}
 
 	@Test
-	void getAllFLights(){
-		Mockito.when(flightRepository.findAll()).thenReturn(flightList);
-		Assertions.assertEquals(2,flightRepository.findAll().size());
+	public void getAllFlightsTest(){
+		Mockito.when(flightDao.getFlights()).thenReturn(flightList);
+		Assertions.assertEquals("1",appService.getFlights().getFlights().get(0).getFlightName());
 	}
 
-//	@Test
-//	void Testing(){
-//		try {
-//			MvcResult result = mvc.perform(MockMvcRequestBuilders.post("http://localhost:8080/bookTicket?flight_id=29&seatCount=11&source=jhodhpur&destination=delhi")
-//					.contentType(MediaType.APPLICATION_JSON)
-//					.accept(MediaType.APPLICATION_JSON)).andExpect(MockMvcResultMatchers.status().isOk())
-//					.andReturn();
-//			org.assertj.core.api.Assertions.assertThat(result).isNotNull();
-//			String userJson = result.getResponse().getContentAsString();
-//			org.assertj.core.api.Assertions.assertThat(userJson).isEqualToIgnoringCase("");
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//	}
+	@Test
+	public void getBookingTest(){
+		Mockito.when(bookingDao.getBooking(Mockito.anyString())).thenReturn(bookingList);
+		Assertions.assertEquals("jhodpur",appService.getBooking("mani").getBookings().get(0).getFromLocation());
+	}
 
-//	@Test
-//	void bookTicket12() throws MalformedURLException {
-//		String sourceLocation = "jhodhpur";
-//		String destinationLocation = "delhi";
-//		Date date = new Date(new java.util.Date().getTime());
+	@Test
+	public void bookTicketTest(){
+		Mockito.when(bookingDao.bookTicket(booking)).thenReturn(booking);
+		Mockito.when(flightDao.getFlightById(Mockito.anyInt())).thenReturn(java.util.Optional.ofNullable(flight));
+		BookTicketBody bookTicketBody = new BookTicketBody(2,"jodhpur","delhi",2);
+		Assertions.assertEquals(Constant.BookingDone,appService.bookFlightTickets(bookTicketBody,"mani"));
+	}
 
-//        MvcResult result = mvc.perform(MockMvcRequestBuilders.post("http://localhost:8080/bookTicket?flight_id=29&seatCount=11&source=jhodhpur&destination=delhi")
-//                .contentType(MediaType.APPLICATION_JSON)
-//
-//                .accept(MediaType.APPLICATION_JSON)).andExpect(MockMvcResultMatchers.status().isOk())
-//                .andReturn();
-//        org.junit.jupiter.api.Assertions.assertEquals("Done", response.getBody());
-//	}
 
-//	@Test
-//	void searchF(){
-//		Mockito.when(flightRepository.findFlights(sour))
-//	}
+
+
 
 }
