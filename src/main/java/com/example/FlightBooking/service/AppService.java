@@ -77,6 +77,7 @@ public class AppService {
         }
     }
 
+    // to get all flights details
     public SearchResponse getFlights(){
         SearchResponse searchResponse=null;
         try{
@@ -90,13 +91,17 @@ public class AppService {
         return searchResponse;
     }
 
+    // To cancel the ticket
     @Transactional
     public String cancelFlight(int ticketId){
         try {
+//            booking info retrieved
             Optional<Booking> optionalBooking = bookingDao.getBookingById(ticketId);
             if (optionalBooking.isPresent()) {
                 Booking booking = optionalBooking.get();
+                // checking is booking info is avalable or not
                 if (booking != null && booking.getStatus()==null) {
+                    // flight info retrieved so can update seats info
                     Optional<Flight> optionalFlight = flightDao.getFlightById(booking.getFlightId());
                     if (optionalFlight.isPresent()) {
                         Flight flight = optionalFlight.get();

@@ -2,15 +2,11 @@ package com.example.FlightBooking;
 
 import com.example.FlightBooking.constants.Constant;
 import com.example.FlightBooking.controller.AppController;
-import com.example.FlightBooking.model.Booking;
-import com.example.FlightBooking.model.Flight;
-import com.example.FlightBooking.model.SearchBody;
-import com.example.FlightBooking.model.SearchResponse;
+import com.example.FlightBooking.model.*;
 import com.example.FlightBooking.repository.BookingRepository;
 import com.example.FlightBooking.repository.FlightRepository;
 import com.example.FlightBooking.service.AppService;
 import com.example.FlightBooking.service.MyUserDetailsService;
-import org.apache.tomcat.util.codec.binary.Base64;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +16,7 @@ import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -58,35 +55,58 @@ public class FlightController {
     private Flight flight = new Flight("8","jhodhpur","mumbai","delhi",5000,new Date(new java.util.Date().getTime()));
     private SearchResponse searchResponse = new SearchResponse(new ArrayList<>(Arrays.asList(flight)));
     private Booking booking = new Booking(Date.valueOf("2022-05-30"), "jhodpur","delhi",8000,Time.valueOf("20:03:10"),Time.valueOf("23:03:10"),2,0,"mani");
+    private List<Booking> bookingList = List.of(
+            new Booking(Date.valueOf("2022-05-30"), "jhodpur","delhi",8000,Time.valueOf("20:03:10"),Time.valueOf("23:03:10"),2,4,"mani"),
+            new Booking(Date.valueOf("2022-05-30"), "jaipur","delhi",8000,Time.valueOf("20:03:10"),Time.valueOf("23:03:10"),2,3,"mani")
+    );
+    private BookingResponse bookingResponse = new BookingResponse(bookingList);
+
     private Object SearchBody;
 //    private Object Booking;
 
+    // Test case for search flight based on search destination and date
     @Test
     public void searchFlight() throws Exception {
         Date date = Date.valueOf("2022-05-23");
-        Mockito.when(appService.getFlightsBySourceDestinationAndDate(new SearchBody("jhodpur","mumbai",date))).thenReturn(searchResponse);
+        Mockito.when(appService.getFlightsBySourceDestinationAndDate(Mockito.any())).thenReturn(searchResponse);
         String token = "mani:mani";
         mockMvc.perform(MockMvcRequestBuilders.get("/search").contentType(
                         MediaType.APPLICATION_JSON).content("{\n" +
                 "\t\"source\": \"jhodpur\",\n" +
                 "\t\"destination\": \"mumbai\",\n" +
                 "\t\"date\": \"2022-05-23\"\n" +
-                "}")).andExpect(
-                status().isOk());
+                "}")).andExpect(jsonPath("$.flights[0].flightName", is("8")))
+                .andExpect(jsonPath("$.flights[0].fromLocation", is("jhodhpur")));;
     }
 
-//    @Test
-//    public void bookTickets() throws Exception {
-//        Mockito.when(appService.bookFlightTickets(Mockito.any(), Mockito.anyString())).thenReturn(Constant.BookingDone);
-//        mockMvc.perform(MockMvcRequestBuilders.post("/bookTicket").contentType(
-//                MediaType.APPLICATION_JSON).content("{\n" +
-//                "    \"flightId\":36,\n" +
-//                "    \"person\":3,\n" +
-//                "    \"source\":\"jaipur\",\n" +
-//                "    \"destination\":\"mumbai\"\n" +
-//                "}")).andExpect(status().isOk());
-//    }
+    // Test case for bookticket
+    @Test
+    public void bookTickets() throws Exception {
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setBasicAuth("mani","mani");
+        Mockito.when(appService.bookFlightTickets(Mockito.any(), Mockito.anyString())).thenReturn(Constant.BookingDone);
+        mockMvc.perform(MockMvcRequestBuilders.post("/bookTicket").headers(httpHeaders).contentType(
+                MediaType.APPLICATION_JSON).content("{\n" +
+                "    \"flightId\":36,\n" +
+                "    \"person\":3,\n" +
+                "    \"source\":\"jaipur\",\n" +
+                "    \"destination\":\"mumbai\"\n" +
+                "}")).andExpect(status().isOk())
+                .andExpect(result -> Assertions.assertEquals(Constant.BookingDone,result.getResponse().getContentAsString()));
+    }
 
+    // Test case for get all booking done by user
+    @Test
+    public void getBooking() throws Exception {
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setBasicAuth("mani","mani");
+        Mockito.when(appService.getBooking(Mockito.anyString())).thenReturn(bookingResponse);
+        mockMvc.perform(MockMvcRequestBuilders.get("/getBooking").headers(httpHeaders)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.bookings[0].flightId", is(4)))
+                .andExpect(jsonPath("$.bookings[0].fromLocation", is("jhodpur")));
+    }
+
+    // Test case for get all flights detials
     @Test
     public void getAllFLights() throws Exception {
         Mockito.when(appService.getFlights()).thenReturn(new SearchResponse(flightList));
@@ -98,6 +118,8 @@ public class FlightController {
                 .andExpect(jsonPath("$.flights[0].fromLocation", is("jhodhpur")));
     }
 
+
+    // Test case for cencel the booking ticket
     @Test
     public void cancelBooking() throws Exception {
         Mockito.when(appService.cancelFlight(Mockito.anyInt())).thenReturn(Constant.CancelMsg);
@@ -108,8 +130,4 @@ public class FlightController {
                 .andExpect(status().isOk())
                 .andExpect(result -> Assertions.assertEquals(Constant.CancelMsg,result.getResponse().getContentAsString()));
     }
-
-
-
-
 }
